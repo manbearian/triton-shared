@@ -5,7 +5,7 @@ module {
     %c0_i32 = arith.constant 0 : i32
     %c256_i32 = arith.constant 256 : i32
     %cst = arith.constant 0.000000e+00 : f32
-    %0 = tt.get_program_id {axis = 0 : i32} : i32
+    %0 = tt.get_program_id x : i32
     %1 = arith.muli %0, %c256_i32 : i32
     %2 = tt.make_range {end = 256 : i32, start = 0 : i32} : tensor<256xi32>
     %3 = tt.splat %1 : (i32) -> tensor<256xi32>

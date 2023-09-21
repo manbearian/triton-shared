@@ -129,8 +129,9 @@ LogicalResult MaskState::parseConstant(arith::ConstantOp constOp,
     auto values = attr.getValues<IntegerAttr>();
     auto value = values[0].getValue();
     auto constAttr = rewriter.getIndexAttr(value.getSExtValue());
-    auto op = rewriter.create<arith::ConstantOp>(loc, constAttr,
-                                                 rewriter.getIndexType());
+    auto op = arith::ConstantOp::materialize(rewriter, constAttr,
+                                             rewriter.getIndexType(), loc);
+
     this->scalar = op.getValue();
   } else {
     auto value = constOp.getValue().cast<IntegerAttr>().getInt();

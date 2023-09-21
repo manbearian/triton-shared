@@ -6,7 +6,7 @@ module {
     %c0_i32 = arith.constant 0 : i32
     %cst = arith.constant 1.000000e+00 : f32
     %cst_0 = arith.constant 0.000000e+00 : f32
-    %0 = tt.get_program_id {axis = 0 : i32} : i32
+    %0 = tt.get_program_id x : i32
     %1 = arith.muli %0, %arg6 : i32
     %2 = tt.addptr %arg1, %1 : !tt.ptr<f32>, i32
     %3 = tt.addptr %arg0, %1 : !tt.ptr<f32>, i32

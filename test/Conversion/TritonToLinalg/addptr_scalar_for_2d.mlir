@@ -1,7 +1,7 @@
 // RUN: triton-shared-opt --triton-to-linalg %s | FileCheck %s
 module {
   tt.func @kernel (%arg0: !tt.ptr<f32> {tt.divisibility = 16 : i32}, %arg1: !tt.ptr<f32> {tt.divisibility = 16 : i32}, %arg2: i32, %arg3: i32, %arg4: i32) {
-    %0 = tt.get_program_id {axis = 0 : i32} : i32
+    %0 = tt.get_program_id x : i32
     %1 = arith.muli %0, %arg2 : i32
     %2 = tt.addptr %arg1, %1 : !tt.ptr<f32>, i32
     %cf0 = arith.constant 0.000000e+00 : f32

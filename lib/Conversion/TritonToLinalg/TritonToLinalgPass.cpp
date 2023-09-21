@@ -49,7 +49,8 @@ public:
 
 struct TritonToLinalgPass : public TritonToLinalgBase<TritonToLinalgPass> {
 
-  static unsigned int constexpr LAUNCH_GRID_RANK = 3;
+  static uint32_t constexpr LAUNCH_GRID_RANK =
+      getMaxEnumValForProgramIDDim() + 1;
 
   // Add additional I32 arguments to represent program
   // ID, one for each dimension of the launch grid
@@ -82,10 +83,11 @@ struct TritonToLinalgPass : public TritonToLinalgBase<TritonToLinalgPass> {
 
 public:
   void getDependentDialects(DialectRegistry &registry) const override {
-    registry.insert<func::FuncDialect, arith::ArithDialect, math::MathDialect,
-                    linalg::LinalgDialect, AffineDialect, scf::SCFDialect,
-                    tensor::TensorDialect, bufferization::BufferizationDialect,
-                    memref::MemRefDialect>();
+    registry
+        .insert<func::FuncDialect, arith::ArithDialect, math::MathDialect,
+                linalg::LinalgDialect, affine::AffineDialect, scf::SCFDialect,
+                tensor::TensorDialect, bufferization::BufferizationDialect,
+                memref::MemRefDialect>();
   }
 
   void runOnOperation() override {
@@ -111,7 +113,7 @@ public:
 
     target.addLegalDialect<
         func::FuncDialect, arith::ArithDialect, math::MathDialect,
-        linalg::LinalgDialect, AffineDialect, scf::SCFDialect,
+        linalg::LinalgDialect, affine::AffineDialect, scf::SCFDialect,
         cf::ControlFlowDialect, tensor::TensorDialect,
         bufferization::BufferizationDialect, memref::MemRefDialect>();
 
@@ -179,8 +181,8 @@ public:
           return !operateOnTensors;
         });
 
-    triton::populateTritonToLinalgConversionPatterns(
-        tritonTypeConverter, patterns, LAUNCH_GRID_RANK);
+    triton::populateTritonToLinalgConversionPatterns(tritonTypeConverter,
+                                                     patterns);
 
     for (auto func : getOperation().getOps<triton::FuncOp>())
       addProgramId(func);

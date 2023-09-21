@@ -23,8 +23,7 @@ void populateTritonToLinalgCanonicalizationPatterns(
     RewritePatternSet &patterns);
 
 void populateTritonToLinalgConversionPatterns(TypeConverter &typeConverter,
-                                              RewritePatternSet &patterns,
-                                              unsigned int launchGridRank);
+                                              RewritePatternSet &patterns);
 
 } // namespace triton
 } // namespace mlir

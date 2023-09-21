@@ -53,8 +53,8 @@ getScalarValue(Value v, Location loc, ConversionPatternRewriter &rewriter) {
           return nullptr;
         }
         auto elemValue = attr.getSplatValue<Attribute>();
-        auto constOp =
-            rewriter.create<arith::ConstantOp>(op.getLoc(), elemValue);
+        auto constOp = arith::ConstantOp::materialize(
+            rewriter, elemValue, attr.getElementType(), op.getLoc());
         v = constOp.getResult();
       }
     } else if (auto op = v.getDefiningOp<triton::SplatOp>()) {
@@ -389,8 +389,8 @@ private:
       auto sMemRef = PtrAnalysis::getScalarMemRef(op.getPtr(), adaptor.getPtr(),
                                                   loc, rewriter);
       auto zeroMap = AffineMap::getConstantMap(0, rewriter.getContext());
-      auto loadOp = rewriter.create<AffineLoadOp>(op.getLoc(), sMemRef, zeroMap,
-                                                  std::nullopt);
+      auto loadOp = rewriter.create<affine::AffineLoadOp>(
+          op.getLoc(), sMemRef, zeroMap, std::nullopt);
       rewriter.replaceOp(op, loadOp.getResult());
       return success();
     }
@@ -491,7 +491,8 @@ struct StoreConverter : public OpConversionPattern<triton::StoreOp> {
       auto sMemRef =
           PtrAnalysis::getScalarMemRef(op.getPtr(), ptr, loc, rewriter);
       auto zeroMap = AffineMap::getConstantMap(0, rewriter.getContext());
-      rewriter.create<AffineStoreOp>(loc, val, sMemRef, zeroMap, std::nullopt);
+      rewriter.create<affine::AffineStoreOp>(loc, val, sMemRef, zeroMap,
+                                             std::nullopt);
       rewriter.eraseOp(op);
       return success();
     }
@@ -763,21 +764,16 @@ public:
 struct GetProgramIDConverter
     : public OpConversionPattern<triton::GetProgramIdOp> {
   using OpConversionPattern<triton::GetProgramIdOp>::OpConversionPattern;
-
-private:
-  const unsigned int LAUNCH_GRID_RANK;
+  static auto constexpr LAUNCH_GRID_RANK = getMaxEnumValForProgramIDDim() + 1;
 
 public:
-  GetProgramIDConverter(MLIRContext *context, unsigned int launchGridRank)
-      : OpConversionPattern(context), LAUNCH_GRID_RANK(launchGridRank) {}
+  GetProgramIDConverter(MLIRContext *context) : OpConversionPattern(context) {}
 
   LogicalResult
   matchAndRewrite(triton::GetProgramIdOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    auto axis = op.getAxis();
-    assert(axis < LAUNCH_GRID_RANK && "program_id expects "
-                                      "axis to be either 0, "
-                                      "1, or 2");
+    auto axis = (uint32_t)op.getAxis();
+    assert(axis < LAUNCH_GRID_RANK && "invalid program-id axis");
 
     auto func = op->getParentOfType<FunctionOpInterface>();
     auto numArgs = func.getNumArguments();
@@ -870,8 +866,8 @@ struct DenseConstantConverter : public OpConversionPattern<arith::ConstantOp> {
     auto attr = cast<DenseElementsAttr>(op.getValue());
     auto loc = op.getLoc();
 
-    auto splatConst = rewriter.create<arith::ConstantOp>(
-        loc, attr.getSplatValue<Attribute>(), attr.getElementType());
+    auto splatConst = arith::ConstantOp::materialize(
+        rewriter, attr.getSplatValue<Attribute>(), attr.getElementType(), loc);
 
     auto init = rewriter.create<tensor::EmptyOp>(
         loc, cast<RankedTensorType>(op.getResult().getType()).getShape(),
@@ -892,14 +888,13 @@ void mlir::triton::populateTritonToLinalgCanonicalizationPatterns(
 }
 
 void mlir::triton::populateTritonToLinalgConversionPatterns(
-    TypeConverter &typeConverter, RewritePatternSet &patterns,
-    unsigned int launchGridRank) {
+    TypeConverter &typeConverter, RewritePatternSet &patterns) {
   populateFunctionOpInterfaceTypeConversionPattern<triton::FuncOp>(
       patterns, typeConverter);
   patterns.add<MetaOpConverter>(patterns.getContext());
   patterns.add<StoreConverter>(patterns.getContext());
   patterns.add<AddPtrConverter>(patterns.getContext());
-  patterns.add<GetProgramIDConverter>(patterns.getContext(), launchGridRank);
+  patterns.add<GetProgramIDConverter>(patterns.getContext());
   patterns.add<YieldConverter>(patterns.getContext());
   patterns.add<LoadConverter>(patterns.getContext());
   patterns.add<LoopConverter>(patterns.getContext());

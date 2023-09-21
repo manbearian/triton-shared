@@ -6,7 +6,7 @@ module {
     %arg2 : i32
   )
   {
-    %0 = tt.get_program_id {axis = 0 : i32} : i32
+    %0 = tt.get_program_id x : i32
     %1 = tt.make_range {end = 1024 : i32, start = 0 : i32}:tensor<1024xi32>
     %2 = tt.splat %0 : (i32) -> tensor<1024xi32>
     %3 = arith.addi %2, %1 : tensor<1024xi32>

@@ -392,8 +392,8 @@ void PtrAnalysis::visitOperandConstSplat(
   auto values = attr.getValues<IntegerAttr>();
   auto value = values[0].getValue();
   auto constAttr = rewriter.getIndexAttr(value.getSExtValue());
-  auto constOp = rewriter.create<arith::ConstantOp>(loc, constAttr,
-                                                    rewriter.getIndexType());
+  auto constOp = arith::ConstantOp::materialize(rewriter, constAttr,
+                                                rewriter.getIndexType(), loc);
 
   state.scalar = constOp;
 

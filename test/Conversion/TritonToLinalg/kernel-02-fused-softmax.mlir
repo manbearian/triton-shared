@@ -3,7 +3,7 @@
 module {
   tt.func public @softmax_kernel_012345(%arg0: !tt.ptr<f32>, %arg1: !tt.ptr<f32>, %arg2: i32, %arg3: i32, %arg4: i32) {
     %cst = arith.constant 0xFF800000 : f32
-    %0 = tt.get_program_id {axis = 0 : i32} : i32
+    %0 = tt.get_program_id x : i32
     %1 = arith.muli %0, %arg2 : i32
     %2 = tt.addptr %arg1, %1 : !tt.ptr<f32>, i32
     %3 = tt.make_range {end = 128 : i32, start = 0 : i32} : tensor<128xi32>

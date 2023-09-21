@@ -8,9 +8,9 @@ llvm_update_compile_flags(triton-shared-translate)
          TritonAnalysis
          TritonTransforms
          TritonGPUTransforms
+         TritonNvidiaGPUTransforms
          TritonLLVMIR
          TritonPTX
-         TritonHSACO
          ${dialect_libs}
          ${conversion_libs}
          # tests
